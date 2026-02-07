@@ -12,6 +12,7 @@ interface Design {
 }
 
 const PAGE_SIZE = 6;
+const MAX_PAGES = 5; // Only 5 pages until more designs are added
 
 const Designs = () => {
   const [designs, setDesigns] = useState<Design[]>([]);
@@ -38,7 +39,8 @@ const Designs = () => {
     const { data } = await supabase
       .from("designs")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("design_code", { ascending: true })
+      .order("id", { ascending: true })
       .range(from, to);
 
     if (data) setDesigns(data);
@@ -141,7 +143,7 @@ const Designs = () => {
         <span className="px-4 py-2 font-semibold">Page {page}</span>
 
         <button
-          disabled={designs.length < PAGE_SIZE}
+          disabled={page >= MAX_PAGES || designs.length < PAGE_SIZE}
           onClick={() => setPage((p) => p + 1)}
           className="px-4 py-2 bg-gray-200 rounded
                      disabled:opacity-50 hover:bg-gray-300"

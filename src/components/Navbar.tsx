@@ -50,8 +50,16 @@ const Navbar = () => {
       My Orders
     </Link>
 
-    <Link to="/profile" className="hover:text-gray-200">
-      <User size={20} />
+    <Link to="/profile" className="flex items-center hover:opacity-90" title="Profile">
+      {user.profile_picture ? (
+        <img
+          src={user.profile_picture}
+          alt="Profile"
+          className="h-8 w-8 rounded-full object-cover border-2 border-white/50"
+        />
+      ) : (
+        <User size={20} />
+      )}
     </Link>
 
     <button
@@ -89,7 +97,12 @@ const Navbar = () => {
           {user ? (
             <>
               <Link to="/orders" className="block py-2 px-4">My Orders</Link>
-              <Link to="/profile" className="block py-2 px-4">Profile</Link>
+              <Link to="/profile" className="flex items-center gap-2 py-2 px-4">
+                {user.profile_picture ? (
+                  <img src={user.profile_picture} alt="" className="h-8 w-8 rounded-full object-cover border border-white/50" />
+                ) : null}
+                Profile
+              </Link>
               <button onClick={handleSignOut} className="block py-2 px-4">Logout</button>
             </>
           ) : (

@@ -6,6 +6,7 @@ interface User {
   email: string;
   full_name?: string;
   phone_number?: string;
+  profile_picture?: string;
   is_admin?: boolean;
 }
 
@@ -30,19 +31,35 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: false,
   error: null,
 
-  // 🔹 Fetch logged-in user (on refresh)
+  // 🔹 Fetch logged-in user (on refresh); prefer profile from users table
   fetchUser: async () => {
     set({ loading: true });
 
     const { data } = await supabase.auth.getUser();
 
     if (data?.user) {
+      const authUser = data.user;
+      let fullName = authUser.user_metadata?.full_name;
+      let phoneNumber = authUser.user_metadata?.phone_number;
+
+      const { data: profileRow } = await supabase
+        .from("users")
+        .select("full_name, phone_number, profile_picture")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      if (profileRow) {
+        if (profileRow.full_name) fullName = profileRow.full_name;
+        if (profileRow.phone_number) phoneNumber = profileRow.phone_number;
+      }
+
       set({
         user: {
-          id: data.user.id,
-          email: data.user.email ?? "",
-          full_name: data.user.user_metadata?.full_name,
-          phone_number: data.user.user_metadata?.phone_number,
+          id: authUser.id,
+          email: authUser.email ?? "",
+          full_name: fullName,
+          phone_number: phoneNumber,
+          profile_picture: profileRow?.profile_picture ?? undefined,
         },
       });
     } else {
@@ -80,12 +97,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     const user = data.user;
 
-    // ✅ CREATE PROFILE ROW
+    // ✅ CREATE USERS ROW (for profile page; full_name/phone_number from signup)
     const { error: profileError } = await supabase
-      .from("profiles")
+      .from("users")
       .insert({
         id: user.id,
-        is_admin: false, // default user
+        email: user.email ?? email,
+        full_name: fullName,
+        phone_number: phoneNumber,
+        is_admin: false,
       });
 
     if (profileError) {

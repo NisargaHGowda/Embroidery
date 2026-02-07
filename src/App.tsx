@@ -32,7 +32,10 @@ function App() {
   const { fetchUser } = useAuthStore();
 
   useEffect(() => {
-    fetchUser();
+    fetchUser().catch((err) => {
+      console.error('Auth fetch failed:', err);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, []);
 
   return (
