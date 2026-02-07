@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { formatPrice } from "../../utils/formatPrice";
+import { useAuthStore } from "../../store/authStore";
+import { useNavigate } from "react-router-dom";
 
 // Define interfaces for Designs & Orders
 interface Design {
@@ -20,10 +23,14 @@ const Admin = () => {
   const [designs, setDesigns] = useState<Design[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!user || !user.is_admin) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -85,7 +92,7 @@ const Admin = () => {
                 <tr key={design.id} className="border">
                   <td className="p-2">{design.id}</td>
                   <td className="p-2">{design.name}</td>
-                  <td className="p-2">₹{design.price.toLocaleString()}</td>
+                  <td className="p-2">{formatPrice(design.price)}</td>
                   <td className="p-2">
                     <a 
                       href={design.pdf_url} 
@@ -123,7 +130,7 @@ const Admin = () => {
                 <tr key={order.id} className="border">
                   <td className="p-2">{order.id}</td>
                   <td className="p-2">{order.user_id}</td>
-                  <td className="p-2">₹{order.total_amount.toLocaleString()}</td>
+                  <td className="p-2">{formatPrice(order.total_amount)}</td>
                   <td className="p-2">{order.status}</td>
                 </tr>
               ))}

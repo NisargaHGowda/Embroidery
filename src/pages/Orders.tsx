@@ -1,25 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useAuthStore } from "../store/authStore";
+import { useNavigate } from "react-router-dom";
+import { Package, Clock, CheckCircle } from "lucide-react";
 
 interface OrderItem {
   id: string;
-  design_id: string;
   quantity: number;
-  price_at_time: number;
-  design: {
-    name: string;
+  designs: {
+    design_code: string;
     image_url: string;
-  };
+  } | null;
 }
 
 interface Order {
   id: string;
-  status: string;
-  total_amount: number;
-  payment_status: string;
+  status: "pending" | "processing" | "completed";
+  payment_status: "pending" | "paid" | "failed";
   created_at: string;
   order_items: OrderItem[];
 }
@@ -29,136 +26,123 @@ const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
     fetchOrders();
-  }, [user, navigate]);
+  }, [user]);
 
   const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            *,
-            design:designs (
-              name,
-              image_url
-            )
-          )
-        `)
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+    setLoading(true);
+    setError("");
 
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (err) {
-      setError('Failed to load orders');
-      console.error('Error fetching orders:', err);
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        id,
+        status,
+        payment_status,
+        created_at,
+        order_items (
+          id,
+          quantity,
+          designs (
+            design_code,
+            image_url
+          )
+        )
+      `)
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      setError("Failed to load orders");
+    } else {
+
+      const normalized = (data || []).map((o: any) => ({
+        id: o.id,
+        status: o.status,
+        payment_status: o.payment_status,
+        created_at: o.created_at,
+        order_items: (o.order_items || []).map((it: any) => ({
+          id: it.id,
+          quantity: it.quantity,
+          designs: Array.isArray(it.designs) ? (it.designs[0] ?? null) : (it.designs ?? null),
+        })),
+      })) as Order[];
+      setOrders(normalized);
     }
+
+    setLoading(false);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'processing':
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'pending':
-        return <Package className="w-5 h-5 text-purple-500" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
-    }
+  const statusIcon = (status: string) => {
+    if (status === "completed") return <CheckCircle className="text-green-500" />;
+    if (status === "processing") return <Clock className="text-yellow-500" />;
+    return <Package className="text-purple-500" />;
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-purple-600">Loading orders...</div>
-      </div>
-    );
+    return <div className="text-center py-20">Loading orders...</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">My Orders</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">My Orders</h1>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">
+        <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {orders.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No orders found</p>
-        </div>
+        <p>No orders yet</p>
       ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Order #{order.id.slice(0, 8)}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(order.status)}
-                    <span className="text-sm font-medium capitalize">{order.status}</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4">
-                  {order.order_items.map((item) => (
-                    <div key={item.id} className="flex items-center py-4">
-                      <img
-                        src={item.design.image_url || 'https://images.unsplash.com/photo-1528255671579-01b9e182ed1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=120&q=80'}
-                        alt={item.design.name}
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                      <div className="ml-4">
-                        <h3 className="font-medium">{item.design.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          Quantity: {item.quantity}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Price: ${item.price_at_time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Total Amount:</span>
-                    <span className="font-bold">${order.total_amount}</span>
-                  </div>
-                  <div className="flex justify-between mt-2">
-                    <span className="font-medium">Payment Status:</span>
-                    <span className={`capitalize ${
-                      order.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'
-                    }`}>
-                      {order.payment_status}
-                    </span>
-                  </div>
-                </div>
+        orders.map((order) => (
+          <div key={order.id} className="bg-white shadow rounded mb-6 p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-sm text-gray-500">
+                  Order #{order.id.slice(0, 8)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {new Date(order.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {statusIcon(order.status)}
+                <span className="capitalize">{order.status}</span>
               </div>
             </div>
-          ))}
-        </div>
+
+            {order.order_items.map((item) => (
+              <div key={item.id} className="flex items-center gap-4 py-2">
+                <img
+                  src={item.designs?.image_url}
+                  className="w-16 h-16 rounded object-cover"
+                />
+                <div>
+                  <p className="font-semibold">
+                    {item.designs?.design_code}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Quantity: {item.quantity}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            <p className="text-sm mt-2">
+              Payment: {order.payment_status}
+            </p>
+          </div>
+        ))
       )}
     </div>
   );

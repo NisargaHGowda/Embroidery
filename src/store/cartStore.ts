@@ -1,9 +1,9 @@
-import { create } from 'zustand';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
-  price: number;
   image_url: string;
   quantity: number;
 }
@@ -16,34 +16,113 @@ interface CartState {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartState>((set) => ({
-  cart: [],
+export const useCartStore = create<CartState>()(
+  persist(
+    (set) => ({
+      cart: [],
 
-  addToCart: (item) =>
-    set((state) => {
-      const existingItem = state.cart.find((cartItem) => cartItem.id === item.id);
-      if (existingItem) {
-        return {
-          cart: state.cart.map((cartItem) =>
-            cartItem.id === item.id
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
-              : cartItem
+      addToCart: (item) =>
+        set((state) => {
+          const existing = state.cart.find((c) => c.id === item.id);
+
+          if (existing) {
+            return {
+              cart: state.cart.map((c) =>
+                c.id === item.id
+                  ? { ...c, quantity: c.quantity + 1 }
+                  : c
+              ),
+            };
+          }
+
+          return { cart: [...state.cart, item] };
+        }),
+
+      removeFromCart: (id) =>
+        set((state) => ({
+          cart: state.cart.filter((item) => item.id !== id),
+        })),
+
+      updateQuantity: (id, quantity) =>
+        set((state) => ({
+          cart: state.cart.map((item) =>
+            item.id === id ? { ...item, quantity } : item
           ),
-        };
-      } else {
-        return { cart: [...state.cart, { ...item, quantity: 1 }] };
-      }
+        })),
+
+      clearCart: () => set({ cart: [] }),
     }),
+    {
+      name: "embroidery-cart", // 🔑 localStorage key
+    }
+  )
+);
 
-  removeFromCart: (id) =>
-    set((state) => ({ cart: state.cart.filter((item) => item.id !== id) })),
+// import { create } from "zustand";
+// import { persist } from "zustand/middleware";
 
-  updateQuantity: (id, quantity) =>
-    set((state) => ({
-      cart: state.cart.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      ),
-    })),
+// interface CartItem {
+//   id: string;
+//   name: string;
+//   price: number; // keep 0 if price not decided yet
+//   image_url: string;
+//   quantity: number;
+// }
 
-  clearCart: () => set({ cart: [] }),
-}));
+// interface CartState {
+//   cart: CartItem[];
+//   addToCart: (item: CartItem) => void;
+//   removeFromCart: (id: string) => void;
+//   updateQuantity: (id: string, quantity: number) => void;
+//   clearCart: () => void;
+// }
+
+// export const useCartStore = create<CartState>()(
+//   persist(
+//     (set) => ({
+//       cart: [],
+
+//       addToCart: (item) =>
+//         set((state) => {
+//           const existingItem = state.cart.find(
+//             (cartItem) => cartItem.id === item.id
+//           );
+
+//           if (existingItem) {
+//             return {
+//               cart: state.cart.map((cartItem) =>
+//                 cartItem.id === item.id
+//                   ? { ...cartItem, quantity: cartItem.quantity + 1 }
+//                   : cartItem
+//               ),
+//             };
+//           }
+
+//           return {
+//             cart: [...state.cart, { ...item, quantity: 1 }],
+//           };
+//         }),
+
+//       removeFromCart: (id) =>
+//         set((state) => ({
+//           cart: state.cart.filter((item) => item.id !== id),
+//         })),
+
+//       updateQuantity: (id, quantity) =>
+//         set((state) => ({
+//           cart: state.cart.map((item) =>
+//             item.id === id
+//               ? { ...item, quantity: Math.max(1, quantity) }
+//               : item
+//           ),
+//         })),
+
+//       clearCart: () => set({ cart: [] }),
+//     }),
+//     {
+//       name: "embroidery-cart", // 🔑 key in localStorage
+//     }
+//   )
+// );
+
+

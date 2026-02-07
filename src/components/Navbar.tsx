@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
@@ -45,17 +45,37 @@ const Navbar = () => {
             </Link>
 
             {user ? (
-              <>
-                <Link to="/orders" className="hover:text-gray-200">My Orders</Link>
-                <Link to="/profile" className="hover:text-gray-200"><User size={20} /></Link>
-                <button onClick={handleSignOut} className="hover:text-gray-200"><LogOut size={20} /></button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="hover:text-gray-200">Login</Link>
-                <Link to="/signup" className="hover:text-gray-200">Sign Up</Link>
-              </>
-            )}
+  <>
+    <Link to="/orders" className="hover:text-gray-200">
+      My Orders
+    </Link>
+
+    <Link to="/profile" className="hover:text-gray-200">
+      <User size={20} />
+    </Link>
+
+    <button
+      onClick={handleSignOut}
+      className="hover:text-gray-200"
+      title="Logout"
+    >
+      <LogOut size={20} />
+    </button>
+  </>
+) : (
+  <>
+    <Link to="/login" className="hover:text-gray-200">
+      Login
+    </Link>
+
+    <Link
+      to="/signup"
+      className="bg-white text-purple-700 px-4 py-1 rounded hover:bg-gray-100"
+    >
+      Sign Up
+    </Link>
+  </>
+)}
           </div>
         </div>
       </div>

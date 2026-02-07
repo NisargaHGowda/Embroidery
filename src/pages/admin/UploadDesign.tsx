@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const UploadDesign = () => {
   const [uploading, setUploading] = useState(false);
