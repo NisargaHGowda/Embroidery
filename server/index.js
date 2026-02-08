@@ -27,11 +27,6 @@ const RESEND_FROM = process.env.RESEND_FROM;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // 🔍 DEBUG SMTP ENV (TEMPORARY)
-console.log("SMTP HOST:", SMTP_HOST);
-console.log("SMTP USER:", SMTP_USER);
-console.log("SMTP PASS LENGTH:", SMTP_PASS?.length);
-console.log("SMTP FROM:", SMTP_FROM);
-console.log("SMTP SECURE:", SMTP_SECURE);
 
 
 const supabaseRest = async (path, { method = "GET", body } = {}) => {
