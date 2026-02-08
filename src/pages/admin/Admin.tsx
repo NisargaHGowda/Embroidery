@@ -24,6 +24,7 @@ interface Order {
   total_amount: number;
   status: OrderStatus;
   payment_status: "pending" | "paid" | "failed";
+  shipping_address?: string | null;
   created_at: string;
   updated_at?: string | null;
   accepted_at?: string | null;
@@ -96,6 +97,7 @@ const Admin = () => {
           total_amount,
           status,
           payment_status,
+          shipping_address,
           created_at,
           updated_at,
           accepted_at,
@@ -119,6 +121,7 @@ const Admin = () => {
         total_amount: o.total_amount,
         status: o.status,
         payment_status: o.payment_status ?? "pending",
+        shipping_address: o.shipping_address ?? null,
         created_at: o.created_at,
         updated_at: o.updated_at ?? null,
         accepted_at: o.accepted_at ?? null,
@@ -247,7 +250,8 @@ const Admin = () => {
         {designs.length === 0 ? (
           <p className="text-gray-600">No designs found.</p>
         ) : (
-          <table className="w-full border">
+          <div className="w-full overflow-x-auto">
+          <table className="w-full border min-w-[900px] text-sm">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border p-2">ID</th>
@@ -292,6 +296,7 @@ const Admin = () => {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
 
@@ -301,32 +306,34 @@ const Admin = () => {
         {orders.length === 0 ? (
           <p className="text-gray-600">No orders placed yet.</p>
         ) : (
-          <table className="w-full border">
+          <div className="w-full overflow-x-auto">
+          <table className="w-full border min-w-[1400px] text-sm">
             <thead>
               <tr className="bg-gray-200">
-                <th className="border p-2">ID</th>
-                <th className="border p-2">User ID</th>
-                <th className="border p-2">Total Amount</th>
-                <th className="border p-2">Payment</th>
-                <th className="border p-2">Status</th>
-                <th className="border p-2">Ordered</th>
-                <th className="border p-2">Accepted</th>
-                <th className="border p-2">Delivered</th>
-                <th className="border p-2">Updated</th>
+                <th className="border p-2 whitespace-nowrap">ID</th>
+                <th className="border p-2 whitespace-nowrap">User ID</th>
+                <th className="border p-2 whitespace-nowrap">Total</th>
+                <th className="border p-2 whitespace-nowrap">Payment</th>
+                <th className="border p-2 whitespace-nowrap">Status</th>
+                <th className="border p-2">Address</th>
+                <th className="border p-2 whitespace-nowrap">Ordered</th>
+                <th className="border p-2 whitespace-nowrap">Accepted</th>
+                <th className="border p-2 whitespace-nowrap">Delivered</th>
+                <th className="border p-2 whitespace-nowrap">Updated</th>
                 <th className="border p-2">Design Code</th>
                 <th className="border p-2">Items</th>
-                <th className="border p-2">Update</th>
+                <th className="border p-2 whitespace-nowrap">Update</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id} className="border">
-                  <td className="p-2">{order.id}</td>
-                  <td className="p-2">{order.user_id}</td>
-                  <td className="p-2">{formatPrice(order.total_amount)}</td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">{order.id}</td>
+                  <td className="p-2 whitespace-nowrap">{order.user_id}</td>
+                  <td className="p-2 whitespace-nowrap">{formatPrice(order.total_amount)}</td>
+                  <td className="p-2 whitespace-nowrap">
                     <select
-                      className="border rounded px-2 py-1"
+                      className="border rounded px-2 py-1 min-w-[110px]"
                       value={order.payment_status}
                       onChange={(e) =>
                         updatePaymentStatus(
@@ -340,25 +347,28 @@ const Admin = () => {
                       <option value="failed">Failed</option>
                     </select>
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     {ORDER_STATUS_LABELS[order.status] ?? order.status}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 max-w-[220px]">
+                    <div className="line-clamp-3">{order.shipping_address ?? "—"}</div>
+                  </td>
+                  <td className="p-2 whitespace-nowrap">
                     {order.created_at
                       ? new Date(order.created_at).toLocaleString()
                       : "—"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     {order.accepted_at
                       ? new Date(order.accepted_at).toLocaleString()
                       : "—"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     {order.delivered_at
                       ? new Date(order.delivered_at).toLocaleString()
                       : "—"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     {order.updated_at
                       ? new Date(order.updated_at).toLocaleString()
                       : "—"}
@@ -374,12 +384,12 @@ const Admin = () => {
                           )
                         ).join(", ")}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 min-w-[220px]">
                     {order.order_items.length === 0 ? (
                       <span className="text-gray-400">No items</span>
                     ) : (
                       order.order_items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-2">
+                        <div key={item.id} className="flex items-center gap-2 py-1">
                           {item.designs?.image_url ? (
                             <img
                               src={item.designs.image_url}
@@ -394,9 +404,9 @@ const Admin = () => {
                       ))
                     )}
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     <select
-                      className="border rounded px-2 py-1"
+                      className="border rounded px-2 py-1 min-w-[130px]"
                       value={order.status}
                       onChange={(e) =>
                         updateOrderStatus(order.id, e.target.value as OrderStatus)
@@ -413,6 +423,7 @@ const Admin = () => {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>

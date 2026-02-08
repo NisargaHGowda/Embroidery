@@ -112,8 +112,12 @@ const sendEmail = async ({ to, subject, text, html }) => {
 
 const BRAND_NAME = "Nature Embroidery";
 const BRAND_COLOR = "#7C3AED";
+const CONTACT_EMAIL = "saralahh84@gmail.com";
+const CONTACT_PHONE = "8722258273";
+const CONTACT_WHATSAPP = "8722258273";
+const WEBSITE_URL = "https://natureembroidery.vercel.app";
 
-const renderEmailLayout = ({ title, message, meta }) => `
+const renderEmailLayout = ({ title, message, meta, details }) => `
   <div style="font-family: Arial, sans-serif; background:#f6f7fb; padding:24px;">
     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:10px; overflow:hidden; border:1px solid #e8e8ef;">
       <div style="background:${BRAND_COLOR}; color:#fff; padding:16px 20px; font-size:18px; font-weight:bold;">
@@ -123,13 +127,43 @@ const renderEmailLayout = ({ title, message, meta }) => `
         <h2 style="margin:0 0 12px 0; font-size:20px;">${title}</h2>
         <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6;">${message}</p>
         ${meta ? `<div style="padding:12px; background:#f3f4f6; border-radius:8px; font-size:13px;">${meta}</div>` : ""}
+        ${details ? `<div style="margin-top:12px;">${details}</div>` : ""}
       </div>
-      <div style="padding:14px 20px; background:#fafafa; color:#6b7280; font-size:12px;">
-        Thank you for choosing ${BRAND_NAME}.
+      <div style="padding:14px 20px; background:#fafafa; color:#6b7280; font-size:12px; line-height:1.6;">
+        <div style="margin-bottom:8px; color:#374151; font-weight:bold;">Contact</div>
+        <div>Email: ${CONTACT_EMAIL}</div>
+        <div>Phone/WhatsApp: ${CONTACT_WHATSAPP}</div>
+        <div>Website: ${WEBSITE_URL}</div>
+        <div style="margin-top:8px;">Thank you for choosing ${BRAND_NAME}. If you did not place this order, please contact our support team.</div>
       </div>
     </div>
   </div>
 `;
+
+const renderItemsTable = (items) => {
+  if (!items || items.length === 0) return "";
+  const rows = items
+    .map(
+      (it) => `
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">${it.design_code ?? "Unknown"}</td>
+        <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">${it.quantity ?? 1}</td>
+      </tr>
+    `
+    )
+    .join("");
+  return `
+    <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Design</th>
+          <th style="text-align:right; padding:8px; border-bottom:1px solid #eee;">Qty</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+};
 
 app.post("/notify-order-delivered", async (req, res) => {
   try {
@@ -224,9 +258,12 @@ app.post("/notify-order-placed", async (req, res) => {
     }
 
     const users = await supabaseRest(
-      `/rest/v1/users?id=eq.${order.user_id}&select=email`
+      `/rest/v1/users?id=eq.${order.user_id}&select=email,full_name`
     );
     const user = users?.[0];
+    const items = await supabaseRest(
+      `/rest/v1/order_items?order_id=eq.${order.id}&select=design_code,quantity`
+    );
 
     const results = {
       emailSent: false,
@@ -237,12 +274,13 @@ app.post("/notify-order-placed", async (req, res) => {
       const shortId = order.id.slice(0, 8);
       await sendEmail({
         to: user.email,
-        subject: "Order placed successfully",
-        text: `Your order ${shortId} has been placed. We will notify you when it is delivered.`,
+        subject: `Order ${shortId} placed successfully`,
+        text: `Hello${user.full_name ? ` ${user.full_name}` : ""}, your order ${shortId} has been placed. We will notify you when it is delivered.`,
         html: renderEmailLayout({
-          title: "Order Placed",
-          message: `Your order <strong>${shortId}</strong> has been placed successfully. We will notify you when it is delivered.`,
-          meta: `Order ID: <strong>${shortId}</strong>`,
+          title: "Order Placed Successfully",
+          message: `Hello${user.full_name ? ` ${user.full_name}` : ""}, thank you for your order. We have received it and will process it shortly.`,
+          meta: `Order ID: <strong>${shortId}</strong><br/>Status: <strong>Order Placed</strong>`,
+          details: renderItemsTable(items),
         }),
       });
       results.emailSent = true;
@@ -252,12 +290,13 @@ app.post("/notify-order-placed", async (req, res) => {
       const shortId = order.id.slice(0, 8);
       await sendEmail({
         to: ADMIN_EMAIL,
-        subject: "New order placed",
+        subject: `New order ${shortId} placed`,
         text: `A new order ${shortId} was placed by user ${order.user_id}.`,
         html: renderEmailLayout({
           title: "New Order Placed",
-          message: `A new order has been placed.`,
-          meta: `Order ID: <strong>${shortId}</strong><br/>User ID: <strong>${order.user_id}</strong>`,
+          message: `A new order has been placed and is ready for review.`,
+          meta: `Order ID: <strong>${shortId}</strong><br/>User ID: <strong>${order.user_id}</strong><br/>Customer Email: <strong>${user?.email ?? "N/A"}</strong>`,
+          details: renderItemsTable(items),
         }),
       });
       results.adminEmailSent = true;
