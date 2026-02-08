@@ -28,7 +28,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  loading: false,
+  loading: true,
   error: null,
 
   // 🔹 Fetch logged-in user (on refresh); prefer profile from users table

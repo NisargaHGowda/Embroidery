@@ -30,6 +30,7 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM;
 const SMTP_SECURE = process.env.SMTP_SECURE === "true";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // 🔍 DEBUG SMTP ENV (TEMPORARY)
 console.log("SMTP HOST:", SMTP_HOST);
@@ -85,7 +86,7 @@ const verifyAdmin = async (accessToken) => {
   return rows?.[0]?.is_admin ? authUser : null;
 };
 
-const sendEmail = async ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text, html }) => {
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
     throw new Error("SMTP env missing");
   }
@@ -105,8 +106,30 @@ const sendEmail = async ({ to, subject, text }) => {
     to,
     subject,
     text,
+    html,
   });
 };
+
+const BRAND_NAME = "Nature Embroidery";
+const BRAND_COLOR = "#7C3AED";
+
+const renderEmailLayout = ({ title, message, meta }) => `
+  <div style="font-family: Arial, sans-serif; background:#f6f7fb; padding:24px;">
+    <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:10px; overflow:hidden; border:1px solid #e8e8ef;">
+      <div style="background:${BRAND_COLOR}; color:#fff; padding:16px 20px; font-size:18px; font-weight:bold;">
+        ${BRAND_NAME}
+      </div>
+      <div style="padding:20px; color:#1f2937;">
+        <h2 style="margin:0 0 12px 0; font-size:20px;">${title}</h2>
+        <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6;">${message}</p>
+        ${meta ? `<div style="padding:12px; background:#f3f4f6; border-radius:8px; font-size:13px;">${meta}</div>` : ""}
+      </div>
+      <div style="padding:14px 20px; background:#fafafa; color:#6b7280; font-size:12px;">
+        Thank you for choosing ${BRAND_NAME}.
+      </div>
+    </div>
+  </div>
+`;
 
 app.post("/notify-order-delivered", async (req, res) => {
   try {
@@ -207,15 +230,37 @@ app.post("/notify-order-placed", async (req, res) => {
 
     const results = {
       emailSent: false,
+      adminEmailSent: false,
     };
 
     if (user?.email) {
+      const shortId = order.id.slice(0, 8);
       await sendEmail({
         to: user.email,
         subject: "Order placed successfully",
-        text: `Your order ${order.id.slice(0, 8)} has been placed. We will notify you when it is delivered.`,
+        text: `Your order ${shortId} has been placed. We will notify you when it is delivered.`,
+        html: renderEmailLayout({
+          title: "Order Placed",
+          message: `Your order <strong>${shortId}</strong> has been placed successfully. We will notify you when it is delivered.`,
+          meta: `Order ID: <strong>${shortId}</strong>`,
+        }),
       });
       results.emailSent = true;
+    }
+
+    if (ADMIN_EMAIL) {
+      const shortId = order.id.slice(0, 8);
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: "New order placed",
+        text: `A new order ${shortId} was placed by user ${order.user_id}.`,
+        html: renderEmailLayout({
+          title: "New Order Placed",
+          message: `A new order has been placed.`,
+          meta: `Order ID: <strong>${shortId}</strong><br/>User ID: <strong>${order.user_id}</strong>`,
+        }),
+      });
+      results.adminEmailSent = true;
     }
 
     res.json({ ok: true, results });
