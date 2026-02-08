@@ -2,6 +2,7 @@ import { useCartStore } from "../store/cartStore";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
   const { cart, clearCart } = useCartStore();
@@ -9,6 +10,7 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const placeOrder = async () => {
     setError("");
@@ -30,15 +32,22 @@ const Checkout = () => {
 
     setLoading(true);
 
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      setError("Please login to place order");
+      setLoading(false);
+      return;
+    }
+
     // 1️⃣ CREATE ORDER
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
-        user_id: user.id,
+        user_id: authData.user.id,
         shipping_address: address,
         payment_method: "COD",
         payment_status: "pending",
-        status: "pending",
+        status: "placed",
         total_amount: 0, // intentionally 0
       })
       .select()
@@ -54,6 +63,7 @@ const Checkout = () => {
     // 2️⃣ CREATE ORDER ITEMS
     const items = cart.map((item) => ({
       order_id: order.id,
+      design_id: item.id,
       design_code: item.name,
       quantity: item.quantity,
       price_at_time: 0,
@@ -70,9 +80,40 @@ const Checkout = () => {
       return;
     }
 
+    try {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      const apiBase =
+        import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+
+      if (accessToken) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch(`${apiBase}/notify-order-placed`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ orderId: order.id }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          const message = await res.text().catch(() => "");
+          console.warn("Email notify failed:", message || res.status);
+        }
+
+        clearTimeout(timeout);
+      }
+    } catch (err) {
+      console.warn("Notify order placed failed:", err);
+    }
+
     clearCart();
     setLoading(false);
-    alert("✅ Order placed successfully!");
+    navigate(`/order-confirmation/${order.id}`);
   };
 
   return (

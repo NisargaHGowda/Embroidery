@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const { data: profileRow } = await supabase
         .from("users")
-        .select("full_name, phone_number, profile_picture")
+        .select("full_name, phone_number, profile_picture, is_admin")
         .eq("id", authUser.id)
         .maybeSingle();
 
@@ -60,6 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           full_name: fullName,
           phone_number: phoneNumber,
           profile_picture: profileRow?.profile_picture ?? undefined,
+          is_admin: profileRow?.is_admin ?? false,
         },
       });
     } else {
@@ -128,10 +129,29 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
 
+    const authUser = data.user;
+    let fullName = authUser.user_metadata?.full_name;
+    let phoneNumber = authUser.user_metadata?.phone_number;
+
+    const { data: profileRow } = await supabase
+      .from("users")
+      .select("full_name, phone_number, profile_picture, is_admin")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (profileRow) {
+      if (profileRow.full_name) fullName = profileRow.full_name;
+      if (profileRow.phone_number) phoneNumber = profileRow.phone_number;
+    }
+
     set({
       user: {
-        id: data.user.id,
-        email: data.user.email ?? "",
+        id: authUser.id,
+        email: authUser.email ?? "",
+        full_name: fullName,
+        phone_number: phoneNumber,
+        profile_picture: profileRow?.profile_picture ?? undefined,
+        is_admin: profileRow?.is_admin ?? false,
       },
       loading: false,
     });

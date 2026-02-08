@@ -1,6 +1,8 @@
 // src/utils/orderStatus.ts
 
 export type OrderStatus =
+  | "placed"
+  | "accepted"
   | "pending"
   | "confirmed"
   | "in_progress"
@@ -9,6 +11,8 @@ export type OrderStatus =
   | "cancelled";
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  placed: "Order Placed",
+  accepted: "Accepted",
   pending: "Pending",
   confirmed: "Confirmed",
   in_progress: "In Progress",
@@ -18,6 +22,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
+  placed: "text-purple-600",
+  accepted: "text-blue-600",
   pending: "text-yellow-600",
   confirmed: "text-blue-600",
   in_progress: "text-purple-600",
