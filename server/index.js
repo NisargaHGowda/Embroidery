@@ -22,14 +22,8 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-import nodemailer from "nodemailer";
-
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT || "587");
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM;
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // 🔍 DEBUG SMTP ENV (TEMPORARY)
@@ -87,27 +81,29 @@ const verifyAdmin = async (accessToken) => {
 };
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
-    throw new Error("SMTP env missing");
+  if (!RESEND_API_KEY || !RESEND_FROM) {
+    throw new Error("Resend env missing");
   }
 
-  const transport = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to,
+      subject,
+      text,
+      html,
+    }),
   });
 
-  await transport.sendMail({
-    from: SMTP_FROM,
-    to,
-    subject,
-    text,
-    html,
-  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Resend API error: ${res.status} ${errText}`);
+  }
 };
 
 const BRAND_NAME = "Nature Embroidery";
