@@ -1,9 +1,5 @@
 {
-    "rewrites": [
-      {
-        "source": "/profile",
-        "destination": "/"
-      }
-    ]
-  }
-  
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
