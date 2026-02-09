@@ -50,7 +50,7 @@ const Footer = () => {
               <a href="https://www.facebook.com/share/1KRTNtc9MH/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Facebook size={24} />
               </a>
-              <a href="https://www.instagram.com/saralahiregoudar?igsh=YnVrMHloNHZ2NzZj" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+              <a href="https://www.instagram.com/nature__embroidery_0203?igsh=MTQwb2ZsNmc0c2gyZQ==" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Instagram size={24} />
               </a>
             </div>

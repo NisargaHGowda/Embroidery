@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { formatPrice } from "../utils/formatPrice";
 import { useCartStore } from "../store/cartStore";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Design {
   id: string;
@@ -18,6 +19,7 @@ const Designs = () => {
   const [designs, setDesigns] = useState<Design[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const addToCart = useCartStore((state) => state.addToCart);
 
@@ -60,6 +62,21 @@ const Designs = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-4">
+        <button
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
+          }}
+          className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+        >
+          Go Back
+        </button>
+      </div>
+
       <h1 className="text-3xl font-bold text-center mb-8">
         Embroidery Designs
       </h1>
@@ -82,18 +99,22 @@ const Designs = () => {
             className="bg-white rounded-lg shadow p-4 select-none"
           >
             {/* IMAGE */}
-            <img
-              src={design.image_url}
-              alt={design.design_code}
-              draggable={false}
-              onContextMenu={(e) => e.preventDefault()}
-              className="w-full h-64 object-contain rounded
+            <Link to={`/designs/${design.id}`}>
+              <img
+                src={design.image_url}
+                alt={design.design_code}
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-64 object-contain rounded
                          pointer-events-none select-none bg-gray-100"
-            />
+              />
+            </Link>
 
-            <h3 className="mt-3 font-semibold text-lg">
-              {design.design_code}
-            </h3>
+            <Link to={`/designs/${design.id}`}>
+              <h3 className="mt-3 font-semibold text-lg hover:text-purple-700 transition-colors">
+                {design.design_code}
+              </h3>
+            </Link>
 
             <p className="text-gray-600">
               Price Range:{" "}
@@ -107,6 +128,12 @@ const Designs = () => {
 
             {/* BUTTONS */}
             <div className="mt-4 flex flex-col gap-2">
+              <Link
+                to={`/designs/${design.id}`}
+                className="w-full text-center bg-gray-900 text-white py-2 rounded hover:bg-black transition"
+              >
+                View Details
+              </Link>
               <button
                 onClick={() => handleAddToCart(design)}
                 className="w-full bg-purple-600 text-white py-2 rounded

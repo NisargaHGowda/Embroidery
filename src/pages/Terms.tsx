@@ -2,20 +2,55 @@ import React from 'react';
 
 const Terms = () => {
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold mb-4">Terms & Conditions</h1>
-      <p>Welcome to Nature Embroidery. By accessing our website, you agree to the following terms and conditions.</p>
+    <div className="max-w-5xl mx-auto px-6 py-12 leading-relaxed text-gray-700">
+      <h1 className="text-3xl font-bold mb-4 text-gray-900">Terms and Conditions</h1>
+      <p>
+        By using Nature Embroidery, you agree to these terms. Please read carefully before placing
+        orders or requesting design customization.
+      </p>
 
-      <h2 className="text-xl font-semibold mt-6">1. Use of Website</h2>
-      <p>This website is for personal and business use. You may not use our designs for resale without permission.</p>
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">1. Platform Usage</h2>
+      <p>
+        Website content is provided for personal and business browsing. Any misuse, copying, or
+        unauthorized automation against our platform is prohibited.
+      </p>
 
-      <h2 className="text-xl font-semibold mt-6">2. Payments & Orders</h2>
-      <p>All payments are processed securely via Razorpay. Orders will be confirmed only after successful payment.</p>
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">2. Order Acceptance</h2>
+      <p>
+        Orders are considered active after successful placement and internal verification. We
+        reserve the right to reject suspicious, incomplete, or non-serviceable requests.
+      </p>
 
-      <h2 className="text-xl font-semibold mt-6">3. Intellectual Property</h2>
-      <p>All embroidery designs are the property of Nature Embroidery. Unauthorized use is prohibited.</p>
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">3. Pricing and Communication</h2>
+      <p>
+        Displayed pricing can vary based on customization, size, and finishing details. Final
+        payable amount is confirmed during order processing and customer communication.
+      </p>
 
-      <p className="mt-6">For any queries, contact us at <a href="mailto:natureembroideries@gmail.com" className="text-purple-600">natureembroideries@gmail.com</a></p>
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">4. Intellectual Property</h2>
+      <p>
+        All design assets, previews, photos, and related materials are the intellectual property of
+        Nature Embroidery unless explicitly licensed.
+      </p>
+
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">5. Liability Limit</h2>
+      <p>
+        We are not responsible for service delays caused by external courier failures, force
+        majeure, or incorrect customer-provided details.
+      </p>
+
+      <h2 className="text-xl font-semibold mt-8 text-gray-900">6. Changes to Terms</h2>
+      <p>
+        Terms may be updated periodically. Continued use of the platform after updates indicates
+        acceptance of revised terms.
+      </p>
+
+      <p className="mt-8">
+        For legal and policy questions, contact{" "}
+        <a href="mailto:natureembroideries@gmail.com" className="text-purple-700 font-semibold">
+          natureembroideries@gmail.com
+        </a>.
+      </p>
     </div>
   );
 };

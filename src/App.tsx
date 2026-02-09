@@ -10,6 +10,7 @@ import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import Designs from "./pages/Designs";
+import DesignDetail from "./pages/DesignDetail";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 import Contact from "./pages/Contact";
@@ -47,6 +48,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/designs" element={<Designs />} />
+              <Route path="/designs/:designId" element={<DesignDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/contact" element={<Contact />} />
