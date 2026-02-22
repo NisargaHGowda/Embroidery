@@ -4,19 +4,18 @@ import { BedDouble as Needle, Heart, ShoppingBag, MessageCircle } from 'lucide-r
 
 const blouseShots = [
   {
-    title: "Back Neck Floral Frame",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
+    title: "Back Neck Embroidery",
+    image: "/images/back-neck.jpg",
+    imagePosition: "object-[58%_center]",
   },
   {
-    title: "Sleeve Border Motif Work",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80",
+    title: "Sleeve Border Embroidery",
+    image: "/images/sleeve.jpg",
   },
   {
-    title: "Bridal Blouse Thread Detail",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80",
+    title: "Cutwork Blouse Design",
+    image: "/images/cutwork.jpg",
+    imagePosition: "object-[center_90%]",
   },
 ];
 
@@ -120,7 +119,9 @@ const Home = () => {
                   <img
                     src={shot.image}
                     alt={shot.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                      shot.imagePosition ?? "object-center"
+                    }`}
                   />
                 </div>
                 <div className="p-4 bg-white">

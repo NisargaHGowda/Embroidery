@@ -12,6 +12,16 @@ interface Design {
   max_price: number;
 }
 
+type RawDesign = {
+  id: string;
+  design_code?: string | null;
+  name?: string | null;
+  image_url?: string | null;
+  min_price?: number | null;
+  max_price?: number | null;
+  price?: number | null;
+};
+
 const PAGE_SIZE = 6;
 const MAX_PAGES = 5; // Only 5 pages until more designs are added
 
@@ -19,6 +29,7 @@ const Designs = () => {
   const [designs, setDesigns] = useState<Design[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const addToCart = useCartStore((state) => state.addToCart);
@@ -34,18 +45,40 @@ const Designs = () => {
 
   const fetchDesigns = async () => {
     setLoading(true);
+    setErrorMessage("");
 
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("designs")
       .select("*")
       .order("design_code", { ascending: true })
       .order("id", { ascending: true })
       .range(from, to);
 
-    if (data) setDesigns(data);
+    if (error) {
+      console.error("Error fetching designs:", error);
+      setDesigns([]);
+      setErrorMessage("Unable to load designs right now.");
+      setLoading(false);
+      return;
+    }
+
+    const normalized = ((data ?? []) as RawDesign[]).map((item) => {
+      const price = Number(item.price ?? 0);
+      const minPrice = Number(item.min_price ?? price);
+      const maxPrice = Number(item.max_price ?? minPrice);
+      return {
+        id: item.id,
+        design_code: item.design_code || item.name || "Design",
+        image_url: item.image_url || "/images/logo.png",
+        min_price: minPrice,
+        max_price: maxPrice,
+      };
+    });
+
+    setDesigns(normalized);
     setLoading(false);
   };
 
@@ -85,6 +118,9 @@ const Designs = () => {
         <p className="text-center text-gray-500 mb-6">
           Loading designs...
         </p>
+      )}
+      {!loading && errorMessage && (
+        <p className="text-center text-red-600 mb-6">{errorMessage}</p>
       )}
 
       <div
@@ -155,6 +191,12 @@ const Designs = () => {
           </div>
         ))}
       </div>
+
+      {!loading && !errorMessage && designs.length === 0 && (
+        <p className="text-center text-gray-600 mt-6">
+          No designs found. Add designs from Admin and refresh this page.
+        </p>
+      )}
 
       {/* PAGINATION */}
       <div className="flex justify-center gap-4 mt-10">
